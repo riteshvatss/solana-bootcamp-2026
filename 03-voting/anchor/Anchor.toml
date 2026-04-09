@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-voting = "65KHV8cXwJ8apTKMqnpSdhdHkHhRySatgKMwnxm6C3gG"
+voting = "DzSG9vpCQttfKoLAYxCJHnkKcU1LZN3arLw6vDJ8vk5k"
 
 [registry]
 url = "https://api.apr.dev"
@@ -16,7 +16,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn jest"
+test = "cargo test -p voting --test litesvm"
 
 [hooks]
 

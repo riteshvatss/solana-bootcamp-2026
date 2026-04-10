@@ -42,6 +42,11 @@ pub mod voting {
         if current_time <= (ctx.accounts.poll_account.poll_voting_start as i64) {
             return Err(ErrorCode::VotingNotStarted.into());
         }
+       
+
+        ctx.accounts.vote_account.voter_account=ctx.accounts.signer.key();
+        ctx.accounts.vote_account.poll_id=_poll_id;
+
 
         candidate_account.candidate_votes += 1;
 
@@ -84,7 +89,8 @@ pub struct InitializeCandidate<'info> {
         init,
         payer = signer,
         space = 8 + CandidateAccount::INIT_SPACE,
-        seeds = [poll_id.to_le_bytes().as_ref(), candidate.as_ref()],
+        //Added this so same name candiate can also be initialize uniquely and easily
+        seeds = [poll_id.to_le_bytes().as_ref(), candidate.as_ref(),poll_account.poll_option_index.to_le_bytes().as_ref()],
         bump
     )]
     pub candidate_account: Account<'info, CandidateAccount>,
@@ -107,10 +113,23 @@ pub struct Vote<'info> {
 
     #[account(
         mut,
-        seeds = [poll_id.to_le_bytes().as_ref(), candidate.as_ref()],
+        seeds = [poll_id.to_le_bytes().as_ref(), candidate.as_ref(),poll_account.poll_option_index.to_le_bytes().as_ref()],
         bump
     )]
     pub candidate_account: Account<'info, CandidateAccount>,
+
+    //created this so one account can vote only one time for one candidate
+    //using init if account already exits for this signer it shows error
+    #[account(
+        init,
+        payer=signer,
+        space=8+VoteAccount::INIT_SPACE,
+        seeds=[b"Voter",signer.key().as_ref(),poll_id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub vote_account:Account<'info,VoteAccount>,
+    pub system_program: Program<'info, System>,
+
 }
 
 #[account]
@@ -131,6 +150,13 @@ pub struct PollAccount {
     pub poll_voting_start: u64,
     pub poll_voting_end: u64,
     pub poll_option_index: u64,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct VoteAccount{
+    pub voter_account:Pubkey,
+    pub poll_id:u64,
 }
 
 #[error_code]
